@@ -1,8 +1,13 @@
 AddCSLuaFile()
 
+DEFINE_BASECLASS( "base_wire_entity" )
+
 ENT.Type = "anim"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_BOTH
+
+ENT.PrintName = "Adv RT Cam"
+ENT.WireDebugName = "Adv RT Cam"
 
 local CAMERA_MODEL = Model( "models/maxofs2d/camera.mdl" )
 
@@ -37,8 +42,17 @@ function ENT:Initialize()
 		self:SetFOV(80)
 
 		self.health = rtcam.cameraHealth
+		self.Inputs = Wire_CreateInputs( self, {"FOV"} )
 	end
 end
+
+function ENT:TriggerInput( name, value )
+
+	if (name == "FOV" and value > 0 and value < 180) then
+		self:SetFOV(value)
+	end
+end
+
 
 function ENT:SetTracking( Ent, LPos )
 
