@@ -5,19 +5,18 @@ TOOL.Name = "#tool.prtcamera.name"
 TOOL.ClientConVar[ "locked" ] = "0"
 TOOL.ClientConVar[ "showId" ] = "0"
 TOOL.ClientConVar[ "id" ] = "none"
---TOOL.ClientConVar[ "toggle" ] = "1"
 TOOL.ClientConVar[ "model" ] = ""
 TOOL.ClientConVar[ "refreshRate" ] = "0.1" -- best to leave default refreshrate to 0.1, or 10hz, to reduce lag
-TOOL.ClientConVar[ "drawCameras" ] = "1"
-TOOL.ClientConVar[ "fov" ] = "60"
---TOOL.ClientConvar[ "resolution" ] = "512"
-
 -- the refresh rate grabs the CurTime of the server and is divided by refreshRate
 --for example: (0.1 equals 10hz) (0.05 equals 20hz) (0.025 equals 40hz) (0.0166666667 equals 60hz) (0.0125 equals 80hz, this is the smoothest and looks 60fps but is VERY performance heavy!)
+TOOL.ClientConVar[ "drawCameras" ] = "1"
+TOOL.ClientConVar[ "fov" ] = "80"
+--TOOL.ClientConvar[ "resolution" ] = "512"
 
 
 cleanup.Register( "rtcameras" )
 cleanup.Register( "rtmonitors" )
+
 
 local SendNotification
 if SERVER then
@@ -77,11 +76,11 @@ local function MakeCamera( ply, locked, id, fov, Data )
 		ent:SetID(id)
 	end
 	if fov then
-        	ent:SetFOV(fov)
+        	ent:SetFOV( math.Clamp( fov, 45, 120 ) )
     	end
 	ent:SetPlayer( ply )
 
-	--ent.toggle = toggle
+
 	ent.locked = locked
 
 	ent:Spawn()
@@ -162,19 +161,7 @@ function TOOL:RightClick( trace )
 
 	local ply = self:GetOwner()
 	local id = self:GetClientInfo('id')
-	--[[
-	local ok = false
-	for k,v in ipairs(ents.FindByClass('gmod_rtcameraprop')) do
-		if v:GetID() == id then
-			ok = true
-			break
-		end
-	end
-	if not ok then
-		SendNotification(ply, "Sorry but there aren't any RT Cameras with the ID '"..id.."'")
-		return false
-	end
-	]]--
+
 	if CheckLimits(ply, 'gmod_rttv') > rtcam.maxMonitorsPerPlayer then SendNotification(ply, "Exceeded maximum number of monitors (" .. rtcam.maxMonitorsPerPlayer+1 .. ")") return false end
 
 	local model = self:GetClientInfo("model")
@@ -205,7 +192,7 @@ function TOOL.BuildCPanel( CPanel )
 		--CPanel:AddControl( "slider", { Type = "Integer", Label = "#tool.prtcamera.resolution", Command = "prtcamera_resolution",  Min = 256, Max = 1024, Help = true } )
 		
 		--FOV Slider
-		CPanel:AddControl( "Slider", { Type = "float", Label = "#tool.prtcamera.fov", Command = "prtcamera_fov", min = 0, max = 180})
+		CPanel:AddControl( "Slider", { Type = "float", Label = "#tool.prtcamera.fov", Command = "prtcamera_fov", min = 45, max = 120, Help = true } )
 	
 	CPanel:AddControl( "PropSelect", { Label = "#tool.prtcamera.model", ConVar = "prtcamera_model", Height = 4, Models = list.Get( "RTMonitorModels" ) } )
 end
@@ -231,6 +218,7 @@ if CLIENT then
 	
 		--FOV Slider
 		language.Add('tool.prtcamera.fov', 'FOV')
+		language.Add('tool.prtcamera.fov.help', 'Sets the Field Of View of Cameras \n(Requires re-spawning the cam, unless its wired!)')
 	
 	language.Add('tool.prtcamera.desc', 'Allows you to place RT Cameras and their displays')
 	language.Add('tool.prtcamera.0', 'Left click place camera. Right click place monitor.')

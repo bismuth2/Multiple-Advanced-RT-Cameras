@@ -39,7 +39,8 @@ function ENT:Initialize()
 			phys:EnableMotion(false)
 		end
 
-		self:SetFOV(80)
+		--self:SetFOV(80)
+		-- We don't need this anymore
 
 		self.health = rtcam.cameraHealth
 		self.Inputs = Wire_CreateInputs( self, {"FOV"} )
@@ -48,11 +49,10 @@ end
 
 function ENT:TriggerInput( name, value )
 
-	if (name == "FOV" and value > 0 and value < 180) then
-		self:SetFOV(value)
+	  if (name == "FOV") then
+		self:SetFOV( math.Clamp( value, 45, 120 ) )
 	end
 end
-
 
 function ENT:SetTracking( Ent, LPos )
 
