@@ -1,5 +1,5 @@
 # Multiple-Advanced-RT-Camera
-Workshop Page: https://steamcommunity.com/sharedfiles/filedetails/?id=1940264801
+https://steamcommunity.com/sharedfiles/filedetails/?id=1940264801
 
 Originally created by thelastpenguin
 
