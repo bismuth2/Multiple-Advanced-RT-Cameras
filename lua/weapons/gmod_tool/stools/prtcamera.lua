@@ -76,7 +76,7 @@ local function MakeCamera( ply, locked, id, fov, Data )
 		ent:SetID(id)
 	end
 	if fov then
-        	ent:SetFOV( math.Clamp( fov, 45, 120 ) )
+        	ent:SetFOV( math.Clamp( fov, 10, 120 ) )
     	end
 	ent:SetPlayer( ply )
 
@@ -192,7 +192,7 @@ function TOOL.BuildCPanel( CPanel )
 		--CPanel:AddControl( "slider", { Type = "Integer", Label = "#tool.prtcamera.resolution", Command = "prtcamera_resolution",  Min = 256, Max = 1024, Help = true } )
 		
 		--FOV Slider
-		CPanel:AddControl( "Slider", { Type = "float", Label = "#tool.prtcamera.fov", Command = "prtcamera_fov", min = 45, max = 120, Help = true } )
+		CPanel:AddControl( "Slider", { Type = "float", Label = "#tool.prtcamera.fov", Command = "prtcamera_fov", min = 10, max = 120, Help = true } )
 	
 	CPanel:AddControl( "PropSelect", { Label = "#tool.prtcamera.model", ConVar = "prtcamera_model", Height = 4, Models = list.Get( "RTMonitorModels" ) } )
 end

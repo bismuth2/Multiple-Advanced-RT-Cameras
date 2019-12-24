@@ -1,6 +1,8 @@
 AddCSLuaFile()
 
-DEFINE_BASECLASS( "base_wire_entity" )
+--if(steamworks.IsSubscribed( 160250458 )) then 
+	DEFINE_BASECLASS( "base_wire_entity" )
+--end
 
 ENT.Type = "anim"
 ENT.Spawnable = false
@@ -50,7 +52,7 @@ end
 function ENT:TriggerInput( name, value )
 
 	  if (name == "FOV") then
-		self:SetFOV( math.Clamp( value, 45, 120 ) )
+		self:SetFOV( math.Clamp( value, 10, 120 ) )
 	end
 end
 
