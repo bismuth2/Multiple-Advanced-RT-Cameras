@@ -223,3 +223,61 @@ if CLIENT then
 	language.Add('tool.prtcamera.desc', 'Allows you to place RT Cameras and their displays')
 	language.Add('tool.prtcamera.0', 'Left click place camera. Right click place monitor.')
 end
+
+if (SERVER) then
+
+	function MakePrtMonitor( pl, Pos, Model, Ang )
+		if ( !pl:CheckLimit( "prt_monitor" ) ) then return false end
+	
+		local prt_monitor = ents.Create( "gmod_prt_monitor" )
+		if (!prt_monitor:IsValid()) then return false end
+
+		prt_monitor:SetAngles( Ang )
+		prt_monitor:SetPos( Pos )
+		prt_monitor:SetModel( Model )
+		prt_monitor:Spawn()
+
+		prt_monitor:SetPlayer( pl )
+
+		local ttable = {
+		    pl = pl
+		}
+		table.Merge(prt_monitor:GetTable(), ttable )
+		
+		pl:AddCount( "prt_monitor", prt_monitor )
+
+		return prt_monitor
+	end
+	
+	duplicator.RegisterEntityClass("gmod_prt_monitor", MakePrtMonitor, "Pos","Model", "Ang", "Vel", "aVel", "frozen")
+
+end
+
+function TOOL:UpdateGhostPrtMonitor( ent, player )
+	if ( !ent || !ent:IsValid() ) then return end
+
+	local tr 	= util.GetPlayerTrace( player, player:GetAimVector() )
+	local trace 	= util.TraceLine( tr )
+
+	if (!trace.Hit || trace.Entity:IsPlayer() || trace.Entity:GetClass() == "gmod_prt_monitor" ) then
+		ent:SetNoDraw( true )
+		return
+	end
+
+	local Ang = trace.HitNormal:Angle()
+	-- TODO: add createflat function
+	-- Ang.pitch = Ang.pitch + 90 -- fixes some props but breaks the rest
+	local min = ent:OBBMins()
+	ent:SetPos( trace.HitPos - trace.HitNormal * min.z )
+	ent:SetAngles( Ang )
+
+	ent:SetNoDraw( false )
+end
+
+function TOOL:Think()
+	if (!self.GhostEntity || !self.GhostEntity:IsValid() || self.GhostEntity:GetModel() != self:GetClientInfo("Model") ) then
+		self:MakeGhostEntity( self:GetClientInfo("Model"), Vector(0,0,0), Angle(0,0,0) )
+	end
+
+	self:UpdateGhostPrtMonitor( self.GhostEntity, self:GetOwner() )
+end
