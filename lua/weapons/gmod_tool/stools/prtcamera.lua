@@ -5,13 +5,16 @@ TOOL.Name = "#tool.prtcamera.name"
 TOOL.ClientConVar[ "locked" ] = "0"
 TOOL.ClientConVar[ "showId" ] = "0"
 TOOL.ClientConVar[ "id" ] = "none"
-TOOL.ClientConVar[ "model" ] = ""
-TOOL.ClientConVar[ "refreshRate" ] = "0.1" -- best to leave default refreshrate to 0.1, or 10hz, to reduce lag
--- the refresh rate grabs the CurTime of the server and is divided by refreshRate
---for example: (0.1 equals 10hz) (0.05 equals 20hz) (0.025 equals 40hz) (0.0166666667 equals 60hz) (0.0125 equals 80hz, this is the smoothest and looks 60fps but is VERY performance heavy!)
-TOOL.ClientConVar[ "drawCameras" ] = "1"
+TOOL.ClientConVar[ "model" ] = "models/props_c17/tv_monitor01.mdl"
+TOOL.ClientConVar[ "drawScreens" ] = "1" -- Hides all screens                                                                TODO: Hide other players screens
+--TOOL.ClientConVar[ "drawSelfScreens" ] = "1" --                                                                            TODO: Hide your own screens
+TOOL.ClientConVar[ "scrollLines" ] = "0" --                                                                                  TODO: Refreshes when reloading renderTargets, make it refresh instantly, add wire input to screens
+TOOL.ClientConVar[ "pvs" ] = "1" -- add the camera belonging to the nearest display to the player's PVS.
+--This allows cameras to render the scenes around them properly but can have a performance impact for VERY large servers.
 TOOL.ClientConVar[ "fov" ] = "80"
---TOOL.ClientConvar[ "resolution" ] = "512"
+TOOL.ClientConVar[ "refreshRate" ] = "10" -- curTime() + ( 1 / RefreshRate) = Hz rate of screens
+TOOL.ClientConVar[ "drawRange" ] = "500" -- Tied to PVS Range
+TOOL.ClientConVar[ "resolution" ] = "512" -- Requires restart,                                                               TODO: make it refresh instantly, add wire input to screens
 
 
 cleanup.Register( "rtcameras" )
@@ -77,7 +80,7 @@ local function MakeCamera( ply, locked, id, fov, Data )
 	end
 	if fov then
         	ent:SetFOV( math.Clamp( fov, 10, 120 ) )
-    	end
+    end
 	ent:SetPlayer( ply )
 
 
@@ -176,49 +179,95 @@ function TOOL:RightClick( trace )
 	return true, ent
 end
 
+local ConVarsDefault = TOOL:BuildConVarList()
+
 function TOOL.BuildCPanel( CPanel )
+
+	--Preset Box
+	CPanel:AddControl( "ComboBox", { MenuButton = 1, Folder = "adv_rt_cameras", Options = { [ "#preset.default" ] = ConVarsDefault }, CVars = table.GetKeys( ConVarsDefault ) } )
 
 	CPanel:AddControl( "textbox", { Label = "#tool.prtcamera.id", Command = "prtcamera_id" } )
 	CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.showId", Command = "prtcamera_showId", Help = true } )
 	CPanel:AddControl( "CheckBox", { Label = "#tool.camera.static", Command = "prtcamera_locked", Help = true } )
 
+		--Scroll Lines effect
+		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.scrollLines", Command = "prtcamera_scrollLines", Help = true } )
+
+		----Performance Settings Category
+		--[[
+		local Category1 = vgui.Create("DCollapsibleCategory")
+		CPanel:AddItem(Category1)
+		Category1:SetLabel("Performance Settings")
+		Category1:SetExpanded(0)
+
+		local CategoryContent1 = vgui.Create( "DPanelList" )
+		CategoryContent1:SetAutoSize( true )
+		CategoryContent1:SetDrawBackground( false )
+		CategoryContent1:SetSpacing( 3 )
+		CategoryContent1:SetPadding( 2 )
+		Category1:SetContents( CategoryContent1 )
+		CategoryContent1.OnMouseWheeled = function(self, dlta) parent:OnMouseWheeled(dlta) end
+		]]--
+
+
 		--Hide screens
-		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.drawScreens", Command = "prtcamera_drawCameras", Help = true } )
+		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.drawScreens", Command = "prtcamera_drawScreens", Help = true } )
+		
+
+		--Camera PVS
+		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.pvs", Command = "prtcamera_pvs", Help = true } )
+
+		--FOV Slider
+		CPanel:AddControl( "Slider", { Type = "integer", Label = "#tool.prtcamera.fov", Command = "prtcamera_fov", min = 10, max = 120, Help = true } )
 
 		--RefreshRate Slider
-		CPanel:AddControl( "slider", { Type = "Float", Label = "#tool.prtcamera.refreshRate", Command = "prtcamera_refreshRate", Min = 0.0125, Max = 0.1, Help = true } )
+		  CPanel:AddControl( "slider", { Type = "integer", Label = "#tool.prtcamera.refreshRate", Command = "prtcamera_refreshRate", Min = 10, Max = 60, Help = true } )
+
+		--Draw Range Slider
+		CPanel:AddControl( "Slider", { Type = "integer", Label = "#tool.prtcamera.drawRange", Command = "prtcamera_drawRange", min = 200, max = 10000, Help = true } )
 
 		--Resolution Slider
-		--CPanel:AddControl( "slider", { Type = "Integer", Label = "#tool.prtcamera.resolution", Command = "prtcamera_resolution",  Min = 256, Max = 1024, Help = true } )
-		
-		--FOV Slider
-		CPanel:AddControl( "Slider", { Type = "float", Label = "#tool.prtcamera.fov", Command = "prtcamera_fov", min = 10, max = 120, Help = true } )
+		CPanel:AddControl( "slider", { Type = "Integer", Label = "#tool.prtcamera.resolution", Command = "prtcamera_resolution",  Min = 256, Max = 1024, Help = true } )
 	
-	CPanel:AddControl( "PropSelect", { Label = "#tool.prtcamera.model", ConVar = "prtcamera_model", Height = 4, Models = list.Get( "RTMonitorModels" ) } )
+	
+	CPanel:AddControl( "PropSelect", { Label = "#tool.prtcamera.model", ConVar = "prtcamera_model", Height = 5, Models = list.Get( "RTMonitorModels" ) } )
 end
 
 if CLIENT then
 	language.Add('tool.prtcamera.name', 'Advanced RT Camera')
 	language.Add('tool.prtcamera.model', 'RT Display Model')
 	language.Add('tool.prtcamera.id', 'RT Camera ID')
-	language.Add('tool.prtcamera.showId', 'Show camera id')
-	language.Add('tool.prtcamera.showId.help', 'Should the camera\'s id be displayed on the screen')
+	language.Add('tool.prtcamera.showId', 'Show Camera ID')
+	language.Add('tool.prtcamera.showId.help', 'Display the camera\'s id on screens')
+
+		--Scroll Lines effect
+		language.Add('tool.prtcamera.scrollLines', 'Scan Line Effect')
+		language.Add('tool.prtcamera.scrollLines.help', 'Displays a scan line effect on monitors')
 
 		--Hide screens
 		language.Add('tool.prtcamera.drawScreens', 'Render Screens')
 		language.Add('tool.prtcamera.drawScreens.help', 'Disable for performance')
 
+		--Camera PVS
+		language.Add('tool.prtcamera.pvs', 'Camera PVS')
+		language.Add('tool.prtcamera.pvs.help', 'This allows cameras to render scenes around them properly\n(Highly recommended to keep this on!)')
+
+		--FOV Slider
+		language.Add('tool.prtcamera.fov', 'Field of View')
+		language.Add('tool.prtcamera.fov.help', 'Sets the Field Of View of new cameras')
+
 		--RefreshRate Slider
 		language.Add('tool.prtcamera.refreshRate', 'Refresh Rate')
-		language.Add('tool.prtcamera.refreshRate.help', 'Sets the Hz rate of monitors from 60hz to 10hz \n(Performance Heavy!)')
+		language.Add('tool.prtcamera.refreshRate.help', 'Sets the Hz rate of screens\n(Performance Heavy!)')
+
+		--Draw Range Slider
+		language.Add('tool.prtcamera.drawRange', 'Draw Range')
+		language.Add('tool.prtcamera.drawRange.help', 'The range that screens will render\n(Performance Heavy!)')
 
 		--Resolution Slider
-		--language.Add('tool.prtcamera.resolution', 'Monitor Resolution')
-		--language.Add('tool.prtcamera.resolution.help', 'Sets the resolution of monitors from 256x256 to 1024x1024')
-	
-		--FOV Slider
-		language.Add('tool.prtcamera.fov', 'FOV')
-		language.Add('tool.prtcamera.fov.help', 'Sets the Field Of View of Cameras \n(Requires re-spawning the cam, unless its wired!)')
+		language.Add('tool.prtcamera.resolution', 'Monitor Resolution')
+		language.Add('tool.prtcamera.resolution.help', 'Sets the display resolution of screens\n(Requires restart!)')
+
 	
 	language.Add('tool.prtcamera.desc', 'Allows you to place RT Cameras and their displays')
 	language.Add('tool.prtcamera.0', 'Left click place camera. Right click place monitor.')
@@ -266,7 +315,7 @@ function TOOL:UpdateGhostPrtMonitor( ent, player )
 
 	local Ang = trace.HitNormal:Angle()
 	-- TODO: add createflat function
-	-- Ang.pitch = Ang.pitch + 90 -- fixes some props but breaks the rest
+	--Ang.pitch = Ang.pitch + 90 -- fixes some props but breaks the rest
 	local min = ent:OBBMins()
 	ent:SetPos( trace.HitPos - trace.HitNormal * min.z )
 	ent:SetAngles( Ang )
