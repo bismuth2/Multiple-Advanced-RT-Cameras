@@ -43,9 +43,6 @@ function ENT:Initialize()
 			phys:EnableMotion(false)
 		end
 
-		--self:SetFOV(80)
-		-- We don't need this anymore
-
 		self.health = rtcam.cameraHealth
 		if WireLib then
 			self.Inputs = Wire_CreateInputs( self, {"FOV"} )
@@ -111,7 +108,7 @@ function ENT:OnTakeDamage( dmginfo )
 		end
 		timer.Simple(4, function()
 			if IsValid(self) then
-				self:Remove()
+				SafeRemoveEntity( self )
 			end
 		end)
 	end
@@ -130,7 +127,7 @@ end
 if CLIENT then
 	function ENT:Think()
 		self:TrackEntity( self:GetentTrack(), self:GetvecTrack() )
-		self:NextThink(CurTime() + GetConVarNumber("prtcamera_refreshRate", 0.1))
+		self:NextThink(CurTime() + ( 1 / GetConVarNumber("prtcamera_refreshRate", 10) ) )
 	end
 end
 

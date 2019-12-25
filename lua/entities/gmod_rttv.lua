@@ -6,9 +6,6 @@ local surface = surface
 local CurTime = CurTime
 local IsValid = IsValid
 
-local refreshRange = rtcam.refreshRange
-local drawRange = rtcam.drawRange
-
 ENT.Type = "anim"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_BOTH
@@ -79,7 +76,7 @@ if CLIENT then
 
 		for k, self in ipairs(ents.FindByClass('gmod_rttv')) do
 			local distSqr = self:GetPos():DistToSqr(LocalPlayer:GetPos())
-			self.shouldDraw = distSqr < drawRange * drawRange
+			self.shouldDraw = distSqr < GetConVarNumber("prtcamera_drawRange", 500) * GetConVarNumber("prtcamera_drawRange", 500)
 			if not self.shouldDraw then
 				if self.target then
 					rtcam.releaseTarget(self.target)
@@ -90,7 +87,7 @@ if CLIENT then
 
 			local target = self:FindTarget()
 			if target.nextUpdate and target.nextUpdate > CurTime() then continue end
-			target.nextUpdate = CurTime() + GetConVarNumber("prtcamera_refreshRate", 0.1)
+			target.nextUpdate = CurTime() + ( 1 / GetConVarNumber("prtcamera_refreshRate", 10) )
 
 			local screenRt = render.GetRenderTarget()
 			local oldScrW, oldScrH = ScrW(), ScrH()
@@ -147,9 +144,10 @@ if CLIENT then
 			local target = self:FindTarget()
 			if target then
 
-				--if ( GetConVarNumber( "cl_drawcameras" ) == 0 ) and (if self:GetNWString("owner", nil) != client:Name()) then return end
-				--if (GetConVarNumber("cl_drawselfcameras") == 0) then return end
-				if (GetConVarNumber("prtcamera_drawCameras") == 0) then return end
+				--TODO: Finish this!
+				--if ( GetConVarNumber( "prtcamera_drawScreens" ) == 0 ) and (if self:GetNWString("owner", nil) != client:Name()) then return end
+				--if (GetConVarNumber("prtcamera_drawSelfScreens") == 0) then return end
+				if (GetConVarNumber("prtcamera_drawScreens") == 0) then return end
 
 				cam.Start3D2D(self:LocalToWorld(meta.offset), self:LocalToWorldAngles(meta.ang), meta.scale)
 					surface.SetDrawColor(255, 255, 255)
@@ -160,6 +158,7 @@ if CLIENT then
 					if self:GetShowID() then
 						draw.SimpleText(self:GetID(), 'rtcamFont', -256 * meta.ratio + 30, -256 + 30, color_white, 0, 0, TEXT_ALIGN_LEFT)
 					end
+
 				cam.End3D2D()
 				
 			end
@@ -168,12 +167,12 @@ if CLIENT then
 end
 
 if SERVER then
-	hook.Add('SetupPlayerVisibility', 'rtcam.pvs', function(ply, viewEntity)
+	hook.Add('SetupPlayerVisibility', 'cam_pvs', function(ply, viewEntity)
 		local plyPos = ply:GetPos()
 		local curDistance = math.huge
 		local curTV = nil
 
-		for k,v in ipairs(ents.FindInSphere(ply:GetPos(), 200)) do
+		for k,v in ipairs(ents.FindInSphere(ply:GetPos(), GetConVarNumber("prtcamera_drawRange", 500))) do
 			if v:GetClass() == 'gmod_rttv' then
 				local d = plyPos:DistToSqr(v:GetPos())
 				if d < curDistance then
@@ -184,6 +183,7 @@ if SERVER then
 		end
 
 		if curTV then
+			if (GetConVarNumber("prtcamera_pvs") == 0) then return end
 			local camera = curTV:FindCamera()
 			if not IsValid(camera) then return end
 			AddOriginToPVS(camera:GetPos())

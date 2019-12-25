@@ -4,22 +4,9 @@ rtcam.maxCamsPerPlayer = 9     -- minus 1 from this, to equal the number you wan
 rtcam.maxMonitorsPerPlayer = 9 -- minus 1 from this, to equal the number you want (9 equals 10 max monitors,  19 equals 20, etc)
 rtcam.cameraHealth = 0 -- set this to be nonzero to enable cameras having health
 
--- picture resolution
-rtcam.resWidth = 512
-rtcam.resHeight = 512
-rtcam.scrollLines = false -- set to true if you want to force scoll lines on clients rt cameras
-
-rtcam.pvs = true -- add the camera belonging to the nearest display to the player's PVS. This allows cameras to render the scenes around them properly but can have a performance impact for VERY large servers.
-
-rtcam.refreshRange = 200 -- past this distance the camera stops refreshing and the pvs gets disabled
-rtcam.drawRange = 500 -- past this distance the camera's display gets faded out and the render target is returned to the render target pool to save memory.
-assert(rtcam.refreshRange <= rtcam.drawRange, "the refresh radius must be less than or equal to the render radius")
-
-
-
-------------------------
---- RT SCREEN MODELS ---
-------------------------
+------------------------------------------------------
+--- RT SCREEN MODELS  -  THIS CAN BE EDITED INGAME ---
+------------------------------------------------------
 
 --- HL2 Screens
 list.Set("RTMonitorModels", "models/props_wasteland/controlroom_monitor001b.mdl", {
@@ -95,11 +82,11 @@ list.Set("RTMonitorModels", "models/props/cs_office/tv_plasma.mdl", {
 	ratio = 1.7,
 })
 
-list.Set("RTMonitorModels", "models/props/de_inferno/tv_monitor01.mdl", {
-	offset = Vector(6.99, -2, 0),
+list.Set("RTMonitorModels", "models/props_c17/tv_monitor01.mdl", {
+	offset = Vector(5, -2, 0.5),
 	ang = Angle(0, 90, 90),
-	scale = 0.022,
-	ratio = 1.4,
+	scale = 0.023,
+	ratio = 1.2,
 })
 
 

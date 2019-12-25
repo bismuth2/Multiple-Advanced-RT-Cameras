@@ -41,13 +41,14 @@ if CLIENT then
 			end
 			index = index + 1
 		end
-		if targets[index] == nil then
+		
+		if targets[index] == nil or GetConVarNumber("prtcamera_scrollLines", 0) then
 			print("created a new render target")
 			local rtid = 'prtcam-'..index
-			--local rt = GetRenderTarget(rtid, GetConVarNumber("prtcamera_resolution", 512), GetConVarNumber("prtcamera_resolution", 512), false)
-			local rt = GetRenderTarget(rtid, rtcam.resWidth, rtcam.resHeight, false)
+			local rt = GetRenderTarget(rtid, GetConVarNumber("prtcamera_resolution", 512), GetConVarNumber("prtcamera_resolution", 512), false)
+			--local rt = GetRenderTarget(rtid, rtcam.resWidth, rtcam.resHeight, false)
 			local mat
-			if rtcam.scrollLines then
+			if (GetConVarNumber("prtcamera_scrollLines") == 1) then
 				mat = CreateMaterial("prtcam-mat-"..index..'-scr', "UnlitTwoTexture",{
 					['$basetexture'] = rt,
 					['$translucent'] = 1,
@@ -64,7 +65,7 @@ if CLIENT then
 						}
 					}
 				})
-			else
+			elseif (GetConVarNumber("prtcamera_scrollLines") == 0) then
 				mat = CreateMaterial("prtcam-mat-"..index..'-one', "UnlitGeneric",{
 					['$basetexture'] = rt,
 					['$ignorez'] = 0,
