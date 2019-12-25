@@ -1,15 +1,17 @@
 AddCSLuaFile()
 
---if(steamworks.IsSubscribed( 160250458 )) then 
-	DEFINE_BASECLASS( "base_wire_entity" )
---end
-
+ENT.Base = "base_wire_entity"
+	if not WireLib then
+    	ENT.Base = "base_gmodentity" -- :(
+	end
+	
 ENT.Type = "anim"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_BOTH
-
-ENT.PrintName = "Adv RT Cam"
-ENT.WireDebugName = "Adv RT Cam"
+	if WireLib then
+		ENT.PrintName = "Adv RT Cam"
+		ENT.WireDebugName = "Adv RT Cam"
+	end
 
 local CAMERA_MODEL = Model( "models/maxofs2d/camera.mdl" )
 
@@ -45,7 +47,9 @@ function ENT:Initialize()
 		-- We don't need this anymore
 
 		self.health = rtcam.cameraHealth
-		self.Inputs = Wire_CreateInputs( self, {"FOV"} )
+		if WireLib then
+			self.Inputs = Wire_CreateInputs( self, {"FOV"} )
+		end
 	end
 end
 
