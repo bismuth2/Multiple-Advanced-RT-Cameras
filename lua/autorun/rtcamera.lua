@@ -3,6 +3,10 @@ AddCSLuaFile()
 rtcam = {}
 include '_rtcamera_settings.lua'
 
+
+-- this is broken? 
+-- It throws a lua error instead of actually being a diagnostic tool.
+--[[
 if SERVER then
 	rtcam.addon:addDiagnostic('RTCam config is valid', function(callback)
 		-- CompileString is used here to validate the _rtcamera_settings.lua file and check it for errors
@@ -15,6 +19,7 @@ if SERVER then
 		callback(true)
 	end)
 end
+]]-- 
 
 if CLIENT then
 	local targets = {}
