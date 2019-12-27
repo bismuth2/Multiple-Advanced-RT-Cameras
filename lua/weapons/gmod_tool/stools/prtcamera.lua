@@ -1,6 +1,10 @@
-
 TOOL.Category = "Render"
 TOOL.Name = "#tool.prtcamera.name"
+
+TOOL.Information = {
+	{ name = "left" },
+	{ name = "right" }
+}
 
 TOOL.ClientConVar[ "locked" ] = "0"
 TOOL.ClientConVar[ "showId" ] = "0"
@@ -20,6 +24,100 @@ TOOL.ClientConVar[ "resolution" ] = "512" -- Requires restart,                  
 cleanup.Register( "rtcameras" )
 cleanup.Register( "rtmonitors" )
 
+local ConVarsDefault = TOOL:BuildConVarList()
+
+function TOOL.BuildCPanel( CPanel )
+
+	--Preset Box
+	CPanel:AddControl( "ComboBox", { MenuButton = 1, Folder = "adv_rt_cameras", Options = { [ "#preset.default" ] = ConVarsDefault }, CVars = table.GetKeys( ConVarsDefault ) } )
+
+	CPanel:AddControl( "textbox", { Label = "#tool.prtcamera.id", Command = "prtcamera_id" } )
+	CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.showId", Command = "prtcamera_showId", Help = true } )
+	CPanel:AddControl( "CheckBox", { Label = "#tool.camera.static", Command = "prtcamera_locked", Help = true } )
+
+		--Scroll Lines effect
+		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.scrollLines", Command = "prtcamera_scrollLines", Help = true } )
+
+		----Performance Settings Category
+		--[[
+		local Category1 = vgui.Create("DCollapsibleCategory")
+		CPanel:AddItem(Category1)
+		Category1:SetLabel("Performance Settings")
+		Category1:SetExpanded(0)
+
+		local CategoryContent1 = vgui.Create( "DPanelList" )
+		CategoryContent1:SetAutoSize( true )
+		CategoryContent1:SetDrawBackground( false )
+		CategoryContent1:SetSpacing( 3 )
+		CategoryContent1:SetPadding( 2 )
+		Category1:SetContents( CategoryContent1 )
+		CategoryContent1.OnMouseWheeled = function(self, dlta) parent:OnMouseWheeled(dlta) end
+		]]--
+
+
+		--Hide screens
+		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.drawScreens", Command = "prtcamera_drawScreens", Help = true } )
+		
+
+		--Camera PVS
+		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.pvs", Command = "prtcamera_pvs", Help = true } )
+
+		--FOV Slider
+		CPanel:AddControl( "Slider", { Type = "integer", Label = "#tool.prtcamera.fov", Command = "prtcamera_fov", min = 10, max = 120, Help = true } )
+
+		--RefreshRate Slider
+		  CPanel:AddControl( "slider", { Type = "integer", Label = "#tool.prtcamera.refreshRate", Command = "prtcamera_refreshRate", Min = 10, Max = 80, Help = true } )
+
+		--Draw Range Slider
+		CPanel:AddControl( "Slider", { Type = "integer", Label = "#tool.prtcamera.drawRange", Command = "prtcamera_drawRange", min = 200, max = 10000, Help = true } )
+
+		--Resolution Slider
+		CPanel:AddControl( "slider", { Type = "Integer", Label = "#tool.prtcamera.resolution", Command = "prtcamera_resolution",  Min = 256, Max = 1024, Help = true } )
+	
+	
+	CPanel:AddControl( "PropSelect", { Label = "#tool.prtcamera.model", ConVar = "prtcamera_model", Height = 5, Models = list.Get( "RTMonitorModels" ) } )
+end
+
+if CLIENT then
+	language.Add('tool.prtcamera.name', 'Advanced RT Camera')
+	language.Add('tool.prtcamera.model', 'RT Display Model')
+	language.Add('tool.prtcamera.id', 'RT Camera ID')
+	language.Add('tool.prtcamera.showId', 'Show Camera ID')
+	language.Add('tool.prtcamera.showId.help', 'Display the camera\'s id on screens')
+
+		--Scroll Lines effect
+		language.Add('tool.prtcamera.scrollLines', 'Scan Line Effect')
+		language.Add('tool.prtcamera.scrollLines.help', 'Displays a scan line effect on monitors')
+
+		--Hide screens
+		language.Add('tool.prtcamera.drawScreens', 'Render Screens')
+		language.Add('tool.prtcamera.drawScreens.help', 'Disable for performance')
+
+		--Camera PVS
+		language.Add('tool.prtcamera.pvs', 'Camera PVS')
+		language.Add('tool.prtcamera.pvs.help', 'This allows cameras to render scenes around them properly\n(Highly recommended to keep this on!)')
+
+		--FOV Slider
+		language.Add('tool.prtcamera.fov', 'Field of View')
+		language.Add('tool.prtcamera.fov.help', 'Sets the Field Of View of new cameras')
+
+		--RefreshRate Slider
+		language.Add('tool.prtcamera.refreshRate', 'Refresh Rate')
+		language.Add('tool.prtcamera.refreshRate.help', 'Sets the Hz rate of screens\n(Performance Heavy!)')
+
+		--Draw Range Slider
+		language.Add('tool.prtcamera.drawRange', 'Draw Range')
+		language.Add('tool.prtcamera.drawRange.help', 'Sets the range that screens will render\n(Performance Heavy!)')
+
+		--Resolution Slider
+		language.Add('tool.prtcamera.resolution', 'Monitor Resolution')
+		language.Add('tool.prtcamera.resolution.help', 'Sets the display resolution of screens\n(Requires restart!)')
+
+	--Help display
+	language.Add('tool.prtcamera.desc', 'Allows you to place RT Cameras and their displays')
+	language.Add( "tool.prtcamera.left", "Create a RT Camera")
+	language.Add( "tool.prtcamera.right", "Place a Monitor")
+end
 
 local SendNotification
 if SERVER then
@@ -179,100 +277,9 @@ function TOOL:RightClick( trace )
 	return true, ent
 end
 
-local ConVarsDefault = TOOL:BuildConVarList()
-
-function TOOL.BuildCPanel( CPanel )
-
-	--Preset Box
-	CPanel:AddControl( "ComboBox", { MenuButton = 1, Folder = "adv_rt_cameras", Options = { [ "#preset.default" ] = ConVarsDefault }, CVars = table.GetKeys( ConVarsDefault ) } )
-
-	CPanel:AddControl( "textbox", { Label = "#tool.prtcamera.id", Command = "prtcamera_id" } )
-	CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.showId", Command = "prtcamera_showId", Help = true } )
-	CPanel:AddControl( "CheckBox", { Label = "#tool.camera.static", Command = "prtcamera_locked", Help = true } )
-
-		--Scroll Lines effect
-		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.scrollLines", Command = "prtcamera_scrollLines", Help = true } )
-
-		----Performance Settings Category
-		--[[
-		local Category1 = vgui.Create("DCollapsibleCategory")
-		CPanel:AddItem(Category1)
-		Category1:SetLabel("Performance Settings")
-		Category1:SetExpanded(0)
-
-		local CategoryContent1 = vgui.Create( "DPanelList" )
-		CategoryContent1:SetAutoSize( true )
-		CategoryContent1:SetDrawBackground( false )
-		CategoryContent1:SetSpacing( 3 )
-		CategoryContent1:SetPadding( 2 )
-		Category1:SetContents( CategoryContent1 )
-		CategoryContent1.OnMouseWheeled = function(self, dlta) parent:OnMouseWheeled(dlta) end
-		]]--
 
 
-		--Hide screens
-		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.drawScreens", Command = "prtcamera_drawScreens", Help = true } )
-		
-
-		--Camera PVS
-		CPanel:AddControl( "CheckBox", { Label = "#tool.prtcamera.pvs", Command = "prtcamera_pvs", Help = true } )
-
-		--FOV Slider
-		CPanel:AddControl( "Slider", { Type = "integer", Label = "#tool.prtcamera.fov", Command = "prtcamera_fov", min = 10, max = 120, Help = true } )
-
-		--RefreshRate Slider
-		  CPanel:AddControl( "slider", { Type = "integer", Label = "#tool.prtcamera.refreshRate", Command = "prtcamera_refreshRate", Min = 10, Max = 60, Help = true } )
-
-		--Draw Range Slider
-		CPanel:AddControl( "Slider", { Type = "integer", Label = "#tool.prtcamera.drawRange", Command = "prtcamera_drawRange", min = 200, max = 10000, Help = true } )
-
-		--Resolution Slider
-		CPanel:AddControl( "slider", { Type = "Integer", Label = "#tool.prtcamera.resolution", Command = "prtcamera_resolution",  Min = 256, Max = 1024, Help = true } )
-	
-	
-	CPanel:AddControl( "PropSelect", { Label = "#tool.prtcamera.model", ConVar = "prtcamera_model", Height = 5, Models = list.Get( "RTMonitorModels" ) } )
-end
-
-if CLIENT then
-	language.Add('tool.prtcamera.name', 'Advanced RT Camera')
-	language.Add('tool.prtcamera.model', 'RT Display Model')
-	language.Add('tool.prtcamera.id', 'RT Camera ID')
-	language.Add('tool.prtcamera.showId', 'Show Camera ID')
-	language.Add('tool.prtcamera.showId.help', 'Display the camera\'s id on screens')
-
-		--Scroll Lines effect
-		language.Add('tool.prtcamera.scrollLines', 'Scan Line Effect')
-		language.Add('tool.prtcamera.scrollLines.help', 'Displays a scan line effect on monitors')
-
-		--Hide screens
-		language.Add('tool.prtcamera.drawScreens', 'Render Screens')
-		language.Add('tool.prtcamera.drawScreens.help', 'Disable for performance')
-
-		--Camera PVS
-		language.Add('tool.prtcamera.pvs', 'Camera PVS')
-		language.Add('tool.prtcamera.pvs.help', 'This allows cameras to render scenes around them properly\n(Highly recommended to keep this on!)')
-
-		--FOV Slider
-		language.Add('tool.prtcamera.fov', 'Field of View')
-		language.Add('tool.prtcamera.fov.help', 'Sets the Field Of View of new cameras')
-
-		--RefreshRate Slider
-		language.Add('tool.prtcamera.refreshRate', 'Refresh Rate')
-		language.Add('tool.prtcamera.refreshRate.help', 'Sets the Hz rate of screens\n(Performance Heavy!)')
-
-		--Draw Range Slider
-		language.Add('tool.prtcamera.drawRange', 'Draw Range')
-		language.Add('tool.prtcamera.drawRange.help', 'The range that screens will render\n(Performance Heavy!)')
-
-		--Resolution Slider
-		language.Add('tool.prtcamera.resolution', 'Monitor Resolution')
-		language.Add('tool.prtcamera.resolution.help', 'Sets the display resolution of screens\n(Requires restart!)')
-
-	
-	language.Add('tool.prtcamera.desc', 'Allows you to place RT Cameras and their displays')
-	language.Add('tool.prtcamera.0', 'Left click place camera. Right click place monitor.')
-end
-
+ -- Ghost monitor placement
 if (SERVER) then
 
 	function MakePrtMonitor( pl, Pos, Model, Ang )
